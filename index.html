@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f2eb">
+  <meta name="description" content="PaperDIY 完整 factory 固件刷写工作台。USB 直连 ESP32-S3，固定从 0x0000 写入并校验。">
+  <title>PaperDIY — 固件工作台</title>
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css">
+  <script src="./vendor/spark-md5-3.0.2.min.js"></script>
+  <script type="module" src="./app.js"></script>
+</head>
+<body>
+<header class="topbar"><a class="brand" href="./"><span class="mark">P<span>↗</span></span> PaperDIY <span class="brand-label">固件工作台</span></a><nav aria-label="主导航"><a href="#workspace">刷写固件</a><a href="#help">使用帮助</a></nav><span class="edition">WEB FLASHER / 01</span></header>
+<main>
+<section class="hero">
+  <div><p class="eyebrow"><span class="dot"></span> 为 M5Stack PaperDIY 而做</p><h1>给墨水屏，<br>一个新的开始<span class="orange">。</span></h1><p class="intro">一根 USB 数据线，一个浏览器。<br>连接你的 PaperDIY，选择本地固件，让下一页从这里开始。</p><div class="specs"><span>ESP32-S3</span><span>16 MB FLASH</span><span>4.7″ E-PAPER</span></div></div>
+  <div class="device-scene"><div class="orbit" aria-hidden="true"></div><img class="device-photo" src="./assets/paperdiy-device.png" width="1024" height="1536" alt="白色 PaperDIY 墨水屏设备，屏幕显示黑白人像" fetchpriority="high" decoding="async"><span class="annotation" aria-hidden="true">YOUR NEXT CHAPTER ↗</span></div>
+</section>
+<div id="environment" class="notice" role="status">正在检查浏览器环境…</div>
+<section id="workspace" class="workspace" aria-label="刷机工作台">
+  <div class="workspace-heading"><div><p class="eyebrow">FLASH TOOLS</p><h2>准备好，开始连接。</h2></div><span id="connectionBadge" class="badge">● 未连接</span></div>
+  <div class="work-grid"><div class="controls">
+    <section class="step"><div class="step-heading"><span class="step-no">01</span><h3>连接设备</h3><span class="subtle">USB / SERIAL</span></div><p>接入 USB-C 数据线，长按电源键约 2 秒，红灯闪烁后松开，进入下载模式。</p><div class="device-choice"><span class="mini-icon">▤</span><div><strong>M5Stack PaperDIY</strong><small>ESP32-S3 · 16 MB Flash / 8 MB PSRAM</small></div><span class="check-icon">✓</span></div><div class="button-row"><button id="connect" class="primary">连接 PaperDIY <span>↗</span></button><button id="disconnect" class="secondary" disabled>断开</button></div><p id="deviceInfo" class="hint">串口识别芯片，不自动识别主板型号。连接会重置设备。</p></section>
+    <section class="step"><div class="step-heading"><span class="step-no">02</span><h3>选择固件</h3><span class="subtle">LOCAL FILE ONLY</span></div>
+      <p>选择完整镜像 <code>firmware.factory.bin</code>。文件只在本地处理，不会上传。</p>
+      <label class="file-zone" for="firmware"><span class="upload-icon">↑</span><strong id="fileTitle">选择 firmware.factory.bin</strong><span>完整镜像 · 本地处理</span><input id="firmware" type="file" accept=".bin"></label>
+      <p id="fileStatus" class="hint" role="status">尚未选择文件。请选择完整 firmware.factory.bin，不能选择 firmware.bin 等单独组件。</p>
+      <div class="device-choice"><span class="mini-icon">0x</span><div><strong>固定写入地址：0x0000</strong><small>完整 factory 镜像 · 无需手动填写</small></div><span class="check-icon">✓</span></div>
+      <div class="parameter-fields"><label for="expectedSha">构建者提供的 SHA-256（可选）</label><input id="expectedSha" class="field-input" type="text" autocomplete="off" spellcheck="false" maxlength="64" placeholder="如有，请粘贴 64 位校验值">
+      <p id="parameterStatus" class="hint" role="status">完整镜像将固定从 0x0000 开始写入。</p></div>
+      <details class="fingerprint"><summary>本地文件 SHA-256</summary><dl><dt>文件指纹</dt><dd id="sha">选择本地文件后计算</dd><dt>检查范围</dt><dd>检查 bootloader（0x0000）、分区表标记（0x8000）和应用镜像头（0x10000）是否符合本次 factory 镜像布局；这不能证明来源可信或主板兼容性。</dd></dl></details>
+    </section>
+    <section class="step last"><div class="step-heading"><span class="step-no">03</span><h3>确认并刷写</h3></div><label class="checkbox"><input type="checkbox" id="confirmBoard">我确认设备为 PaperDIY，已选择来源可信的完整 firmware.factory.bin，已备份 Flash 与 SD 卡，并了解写入范围内的现有内容会被覆盖。</label><div class="notice compact">已通过 PaperDIY 真机刷写验证。请使用适配设备的完整固件，并在刷写后检查启动与屏幕显示。</div><button id="flash" class="primary flash-button" disabled>开始刷写 <span>→</span></button><p id="readyHint" class="hint">选择完整 factory 镜像、连接设备并勾选确认后可开始；写入地址固定为 0x0000。</p></section>
+  </div><aside class="monitor"><div class="monitor-top"><span class="eyebrow">SESSION MONITOR</span><span id="liveDot" class="live-dot"></span></div><h3 id="statusTitle">等待设备连接</h3><p id="statusText">所有操作状态会显示在这里。<br>尚未向设备写入数据。</p><div class="progress-number"><span id="percent">0</span><small>%</small></div><progress id="progress" max="100" value="0" aria-label="固件写入进度"></progress><ol class="stages"><li id="stage-connect">连接与芯片检查</li><li id="stage-image">本地镜像 SHA-256 校验</li><li id="stage-write">写入设备 Flash</li><li id="stage-verify">设备 Flash MD5 校验</li></ol><div class="log-heading"><span>操作日志</span><button id="saveLog" class="text-button">导出 ↓</button></div><pre id="log" tabindex="0" aria-label="操作日志"></pre><p class="monitor-note">100% 仅代表传输结束。<br>设备校验通过后才报告写入完成；屏幕和启动结果需人工检查。</p></aside></div>
+</section>
+<section id="help" class="help">
+  <div><p class="eyebrow">A LITTLE HELP</p><h2>遇到问题？<br>从这里排查。</h2><a href="https://docs.m5stack.com/en/core/PaperDIY_Assembly_Kit" target="_blank" rel="noreferrer">查看 M5Stack 设备文档 ↗</a></div>
+  <div class="faqs">
+    <details open><summary>浏览器找不到设备怎么办？</summary><p>请用电脑上的 Chrome 或 Edge 打开本页面，使用支持数据传输的 USB-C 线，并关闭 M5Burner、串口监视器等占用串口的程序。连接 PaperDIY 后，长按电源键约 2 秒，红灯闪烁后松开，再点击「连接 PaperDIY」并选择对应串口。</p></details>
+    <details><summary>应该选择哪个固件文件？</summary><p>选择适配 PaperDIY 的完整镜像 <code>firmware.factory.bin</code>；如果下载的是 ZIP，请先解压。不要选择 <code>firmware.bin</code>、<code>bootloader.bin</code>、<code>partitions.bin</code>，也不要把其他文件改名。写入地址固定为 <code>0x0000</code>，无需手动填写。</p></details>
+    <details><summary>这个页面已经真机测试过了吗？</summary><p>已经在 PaperDIY 真机上完成刷写验证，可以用于刷写适配该设备的完整固件。刷写前请备份现有数据；完成后按页面提示断开串口并重置设备，检查启动与屏幕显示。</p></details>
+    <details><summary>写入中断或校验失败怎么办？</summary><p>先导出操作日志，检查 USB 线和供电，再让设备重新进入下载模式并连接。重新选择正确的完整固件后重试，写入地址由页面自动固定为 <code>0x0000</code>。中断前已写入的内容不会自动恢复，页面也不会将中断或校验失败报告为成功。</p></details>
+    <details><summary>刷写完成后，屏幕没有变化怎么办？</summary><p>确认页面显示「写入完成 · 校验通过」，点击「断开」释放串口，再单击电源键重置设备。如果仍无显示，检查固件是否适配 PaperDIY，以及 SD 卡、字体和资源文件是否符合该固件要求。写入校验通过表示数据一致，启动与显示还需在设备上确认。</p></details>
+    <details><summary>固件会上传吗？可以离线使用吗？</summary><p>不会上传。固件只在本机读取、校验，并通过 USB 写入设备。离线使用需事先准备完整网页资源，再通过 <code>localhost</code> 本地服务打开；不能直接双击 HTML 文件使用刷写功能。</p></details>
+  </div>
+</section>
+</main><footer><span class="brand">PaperDIY <span class="brand-label">让每一次刷新，都有可能。</span></span><span>独立社区工具 · 非 M5Stack 官方产品</span><a href="./THIRD_PARTY_NOTICES.md">开源许可 ↗</a></footer>
+<noscript>请启用 JavaScript 以使用串口刷写。</noscript>
+</body></html>
